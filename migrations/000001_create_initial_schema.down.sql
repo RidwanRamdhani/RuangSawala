@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS user_interests;
+DROP TABLE IF EXISTS interests;
+DROP TABLE IF EXISTS auth;
+DROP TABLE IF EXISTS users;

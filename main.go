@@ -4,9 +4,29 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	"github.com/ruangsawala/backend/config"
+	_ "modernc.org/sqlite"
 )
+
+func runMigrations(dbPath string) {
+	m, err := migrate.New(
+		"file://migrations",
+		"sqlite3://"+dbPath,
+	)
+	if err != nil {
+		log.Fatal("Migration init failed:", err)
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Migration up failed:", err)
+	}
+	log.Println("Migrations applied successfully")
+}
 
 func main() {
 	// Load environment variables
@@ -16,6 +36,9 @@ func main() {
 
 	// Load configuration
 	cfg := config.Load()
+
+	// Run database migrations
+	runMigrations(cfg.DBPath)
 
 	// Set Gin mode based on environment
 	if cfg.Env == "production" {

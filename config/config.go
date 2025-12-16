@@ -7,18 +7,20 @@ import (
 
 // Config holds the application configuration
 type Config struct {
-	Port string
-	Env  string
+	Port   string
+	Env    string
+	DBPath string
 }
 
 // Load loads configuration from environment variables
 func Load() *Config {
 	cfg := &Config{
-		Port: getEnv("PORT", "8080"),
-		Env:  getEnv("ENV", "development"),
+		Port:   getEnv("PORT", "8080"),
+		Env:    getEnv("ENV", "development"),
+		DBPath: getEnv("DB_PATH", "db/ruangsawala.db"),
 	}
 
-	log.Printf("Configuration loaded: Port=%s, Env=%s", cfg.Port, cfg.Env)
+	log.Printf("Configuration loaded: Port=%s, Env=%s, DBPath=%s", cfg.Port, cfg.Env, cfg.DBPath)
 	return cfg
 }
 
