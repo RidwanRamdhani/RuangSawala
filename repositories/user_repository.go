@@ -2,6 +2,9 @@ package repositories
 
 import (
 	"database/sql"
+	"time"
+
+	"github.com/ruangsawala/backend/models"
 )
 
 type UserRepository struct {
@@ -21,14 +24,38 @@ func (r *UserRepository) IsEmailTaken(email string) (bool, error) {
 	return count > 0, nil
 }
 
-func (r *UserRepository) CreateUser(username, email, hashedPassword string) error {
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, *models.Auth, error) {
+	query := `
+		SELECT u.id, u.username, u.email, u.created_at, u.updated_at, a.password_hash, a.is_verified
+		FROM users u
+		JOIN auth a ON u.id = a.user_id
+		WHERE u.email = ?
+	`
+	user := &models.User{}
+	auth := &models.Auth{}
+	err := r.db.QueryRow(query, email).Scan(
+		&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt,
+		&auth.PasswordHash, &auth.IsVerified,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	auth.UserID = user.ID
+	return user, auth, nil
+}
+
+func (r *UserRepository) CreateUser(user *models.User, auth *models.Auth) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	result, err := tx.Exec("INSERT INTO users (username, email) VALUES (?, ?)", username, email)
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+
+	result, err := tx.Exec("INSERT INTO users (username, email, created_at, updated_at) VALUES (?, ?, ?, ?)", user.Username, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -37,8 +64,10 @@ func (r *UserRepository) CreateUser(username, email, hashedPassword string) erro
 	if err != nil {
 		return err
 	}
+	user.ID = int(userID)
+	auth.UserID = int(userID)
 
-	_, err = tx.Exec("INSERT INTO auth (user_id, password_hash) VALUES (?, ?)", userID, hashedPassword)
+	_, err = tx.Exec("INSERT INTO auth (user_id, password_hash, is_verified) VALUES (?, ?, ?)", auth.UserID, auth.PasswordHash, auth.IsVerified)
 	if err != nil {
 		return err
 	}
