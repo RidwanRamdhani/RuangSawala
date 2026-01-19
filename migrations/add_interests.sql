@@ -1,0 +1,22 @@
+-- SQLite
+INSERT INTO interests (name) VALUES 
+('Gaming'),
+('Movies'),
+('Marvel Universe'),
+('DC Universe'),
+('Anime & Manga'),
+('K-Pop'),
+('Pop'),
+('Indie'),
+('Rock'),
+('Jazz'),
+('EDM'),
+('Rap'),
+('Memasak'),
+('Traveling'),
+('Kopi & Cafe'),
+('Gym & Fitness'),
+('Fotografi'),
+('Hiking'),
+('Olahraga'),
+('Seni');
