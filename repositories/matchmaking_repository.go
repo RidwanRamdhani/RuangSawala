@@ -16,11 +16,11 @@ func NewMatchmakingRepository(rdb *redis.Client) *MatchmakingRepository {
 
 const PoolKey = "matchmaking_pool"
 
-func (r *MatchmakingRepository) AddToPool(ctx context.Context, userID string) error {
+func (r *MatchmakingRepository) AddToPool(ctx context.Context, userID int) error {
 	return r.rdb.SAdd(ctx, PoolKey, userID).Err()
 }
 
-func (r *MatchmakingRepository) RemoveFromPool(ctx context.Context, userID string) error {
+func (r *MatchmakingRepository) RemoveFromPool(ctx context.Context, userID int) error {
 	return r.rdb.SRem(ctx, PoolKey, userID).Err()
 }
 
