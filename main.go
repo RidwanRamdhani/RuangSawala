@@ -1,14 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	"github.com/ruangsawala/backend/config"
+	"github.com/ruangsawala/backend/controllers"
+	"github.com/ruangsawala/backend/routes"
+	"github.com/ruangsawala/backend/services"
 	_ "modernc.org/sqlite"
 )
 
@@ -40,22 +43,19 @@ func main() {
 	// Run database migrations
 	runMigrations(cfg.DBPath)
 
-	// Set Gin mode based on environment
-	if cfg.Env == "production" {
-		gin.SetMode(gin.ReleaseMode)
+	// Initialize database connection
+	db, err := sql.Open("sqlite", cfg.DBPath)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
 	}
+	defer db.Close()
+
+	// Initialize services and controllers
+	authService := services.NewAuthService(db)
+	authController := controllers.NewAuthController(authService)
 
 	// Initialize Gin router
-	router := gin.Default()
-
-	// Basic health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"message": "RuangSawala backend is running",
-			"env":     cfg.Env,
-		})
-	})
+	router := routes.NewRouter(cfg, authController)
 
 	// Start server
 	log.Printf("Starting server on port %s...", cfg.Port)
