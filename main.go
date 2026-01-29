@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 
@@ -8,6 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"github.com/ruangsawala/backend/config"
 	"github.com/ruangsawala/backend/controllers"
 	"github.com/ruangsawala/backend/routes"
@@ -49,6 +51,20 @@ func main() {
 		log.Fatalf("Failed to open database: %v", err)
 	}
 	defer db.Close()
+
+	// Initialize Redis client
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPass,
+		DB:       cfg.RedisDB,
+	})
+	defer rdb.Close()
+
+	// Test Redis connection
+	if err := rdb.Ping(context.TODO()).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	log.Println("Redis connected successfully")
 
 	// Initialize services and controllers
 	authService := services.NewAuthService(db)
